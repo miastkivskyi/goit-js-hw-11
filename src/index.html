@@ -1,27 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./css/styles.css" />
     <title>Image search</title>
+    <link rel="stylesheet" href="./sass/index.scss" />
   </head>
   <body>
-    <form class="search-form" id="search-form">
-      <input
-        type="text"
-        name="searchQuery"
-        autocomplete="off"
-        placeholder="Search images..."
-      />
-      <button class="btn" type="submit">
-        <img class="img-search" src="/src/images/search.png" alt="Search" />
-      </button>
-    </form>
-    <div class="gallery">
-      <!-- Картки зображень -->
-    </div>
-    <script src="index.js" type="module"></script>
+    <header class="header">
+      <form class="search-form" id="search-form">
+        <input
+          type="text"
+          name="searchQuery"
+          autocomplete="off"
+          placeholder="Search images..."
+        />
+        <button type="submit" class="btn">
+          <img src="./images/search.svg" alt="Search" width="22" height="21" />
+        </button>
+      </form>
+    </header>
+
+    <main>
+      <div class="gallery">
+        <!-- Картки зображень -->
+      </div>
+      <div class="btn-padding">
+        <button type="button" class="load-more is-hidden">Load more</button>
+      </div>
+    </main>
+
+    <script type="module" src="./index.js"></script>
   </body>
 </html>

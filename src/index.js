@@ -1,93 +1,80 @@
-import axios from 'axios';
-import { Notify } from 'notiflix';
-import templateFunction from './template.hbs';
+import fetchCards from './js/fetch';
+import { addMarkup } from './js/markup';
+import { refs } from './js/refs';
+import { message } from './js/message';
+
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-import './css/styles.css';
+function smoothScroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
 
-const refs = {
-  galleryEl: document.querySelector('.gallery'),
-  formData: document.querySelector('#search-form'),
-  input: document.querySelector('input'),
-};
-const simple = new SimpleLightbox('.gallery a');
-
-let searchQuery = '';
-let pages = 1;
-
-refs.formData.addEventListener('submit', addNewSearch);
-
-function addNewSearch(e) {
-  e.preventDefault();
-  searchQuery = refs.input.value;
-  nullPage();
-  paginationOfImg(searchQuery);
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
 }
 
-window.addEventListener('scroll', () => {
-  if (
-    window.scrollY + window.innerHeight >=
-    document.documentElement.scrollHeight
-  ) {
-    paginationOfImg();
-  }
+let pageNumber = 1;
+let searchName;
+
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionsData: 'alt',
+  captionDelay: 250,
 });
 
-async function paginationOfImg() {
-  try {
-    const response = await GetMorePhoto();
-    return renderCard(response);
-  } catch (error) {
-    console.log(error.message);
-  }
-}
+lightbox.refresh();
 
-async function GetMorePhoto() {
-  try {
-    const res = await axios({
-      url: 'https://pixabay.com/api/',
-      params: {
-        key: '31896058-85566f2bc64dcb55d4cd975a7',
-        q: searchQuery,
-        image_type: 'photo',
-        orientation: 'horizontal',
-        safesearch: true,
-        per_page: 40,
-        page: pages,
-      },
-    });
-    Comment(res.data.totalHits);
-    upPage();
-    return res.data.hits;
-  } catch (e) {
-    return console.error(e);
-  }
-}
+refs.searchFormEl.addEventListener('submit', onSearchRequest);
+refs.loadMoreBtn.addEventListener('click', onLoadMore);
 
-function Comment(value) {
-  if (pages === 1 && value !== 0) {
-    Notify.success(`Hooray! We found ${value} images.`);
-  }
-  if (value === 0) {
-    Notify.failure(
-      'Sorry, there are no images matching your search query. Please try again.'
-    );
-  } else if (value / 40 + 1 < pages) {
-    Notify.info("We're sorry, but you've reached the end of search results.");
-  }
-}
-
-function renderCard(array) {
-  refs.galleryEl.insertAdjacentHTML('beforeend', templateFunction(array));
-  simple.refresh();
-}
-
-function upPage() {
-  pages += 1;
-}
-
-function nullPage() {
-  pages = 1;
+async function onSearchRequest(e) {
+  e.preventDefault();
+  pageNumber = 1;
   refs.galleryEl.innerHTML = '';
+  searchName = e.target.searchQuery.value.trim();
+
+  const resultRequest = await fetchCards(searchName, pageNumber);
+  const tHits = resultRequest.totalHits;
+
+  if (resultRequest.hits.length === 0) {
+    refs.loadMoreBtn.classList.add('is-hidden');
+    message.failure();
+  } else {
+    addMarkup(resultRequest.hits);
+    lightbox.refresh();
+    message.success(tHits);
+
+    let countPage = Math.ceil(tHits / 40);
+
+    if (tHits < 40 || pageNumber === countPage) {
+      refs.loadMoreBtn.classList.add('is-hidden');
+      setTimeout(() => {
+        message.info();
+      }, 3500);
+    } else {
+      lightbox.refresh();
+      refs.loadMoreBtn.classList.remove('is-hidden');
+    }
+  }
+  refs.searchFormEl.reset();
+}
+
+async function onLoadMore() {
+  pageNumber += 1;
+  const getResultRequest = await fetchCards(searchName, pageNumber);
+  const moreHits = getResultRequest.totalHits;
+  addMarkup(getResultRequest.hits);
+  //console.log(moreHits);
+  lightbox.refresh();
+  smoothScroll();
+
+  if (moreHits <= refs.galleryEl.children.length) {
+    refs.loadMoreBtn.classList.add('is-hidden');
+    setTimeout(() => {
+      message.info();
+    }, 3500);
+  }
 }
