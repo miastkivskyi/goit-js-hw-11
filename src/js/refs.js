@@ -1,6 +1,7 @@
 export const refs = {
-  galleryEl: document.querySelector('.gallery'),
-  searchFormEl: document.querySelector('#search-form'),
-  inputEl: document.querySelector('input[name="searchQuery"]'),
-  loadMoreBtn: document.querySelector('.load-more'),
+  form: document.querySelector('#search-form'),
+  input: document.querySelector('input'),
+  container: document.querySelector('.gallery'),
+  button: document.querySelector('.load-more'),
+  galleryWrapper: document.querySelector('.gallery'),
 };
